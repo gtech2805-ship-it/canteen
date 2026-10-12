@@ -1,0 +1,13 @@
+{
+  "name": "canteen-app",
+  "version": "1.0.0",
+  "description": "Canteen ordering with Razorpay (Google Pay / UPI) payments. No dependencies.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

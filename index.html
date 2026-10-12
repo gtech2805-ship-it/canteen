@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Canteen</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#1f6b4a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Canteen">
+<link rel="icon" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<style>
+:root{--bg:#f3f1ea;--card:#fff;--ink:#1d2b24;--mute:#6b776f;--line:#dcd8cb;--acc:#1f6b4a;--acc2:#e8a317;--bad:#b3392b;--on:#fff}
+@media(prefers-color-scheme:dark){:root{--bg:#141a17;--card:#1e2723;--ink:#eef0e8;--mute:#9aa79f;--line:#33403a;--acc:#4fbf8b;--acc2:#f0b43a;--bad:#ef7b6b;--on:#10231a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 'Bricolage Grotesque',system-ui,sans-serif;padding-top:env(safe-area-inset-top,0px)}
+header{padding:18px 16px 8px;max-width:900px;margin:auto}
+h1{margin:0;font-size:28px;font-weight:800;letter-spacing:-.5px}
+h2{font-size:18px;margin:0 0 10px}
+nav{display:flex;gap:6px;padding:8px 16px;max-width:900px;margin:auto;overflow-x:auto;position:sticky;top:0;background:var(--bg);z-index:5}
+nav button{flex:1;white-space:nowrap;padding:10px 14px;border:2px solid var(--line);background:transparent;color:var(--ink);border-radius:10px;font:inherit;font-weight:600;cursor:pointer}
+nav button.on{background:var(--acc);border-color:var(--acc);color:var(--on)}
+main{max-width:900px;margin:auto;padding:8px 16px 100px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.item{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:4px;text-align:left;font:inherit;color:inherit;cursor:pointer}
+.item b{font-size:16px}.item small{color:var(--mute)}.item .p{font-weight:800;color:var(--acc);font-size:18px}
+.item.off{opacity:.45;cursor:not-allowed}
+.item.offer{border:2px solid var(--acc2)}
+.chips{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px}
+.chip{padding:6px 12px;border-radius:99px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;cursor:pointer;white-space:nowrap}
+.chip.on{background:var(--acc2);border-color:var(--acc2);color:#1d1a10;font-weight:600}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-bottom:1px dashed var(--line)}
+.row:last-child{border:0}
+.btn{padding:10px 14px;border:0;border-radius:10px;background:var(--acc);color:var(--on);font:inherit;font-weight:600;cursor:pointer}
+.btn:disabled{opacity:.5;cursor:wait}
+.btn.alt{background:transparent;border:1px solid var(--line);color:var(--ink)}
+.btn.bad{background:transparent;color:var(--bad);border:1px solid var(--bad)}
+.btn.sm{padding:5px 10px;font-size:14px}
+input,select{font:inherit;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);width:100%}
+.f{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}.f .w{grid-column:1/-1}
+.tok{display:inline-block;background:var(--ink);color:var(--bg);border-radius:8px;padding:2px 10px;font-weight:800;margin-right:6px}
+.st{font-size:13px;font-weight:600;padding:2px 8px;border-radius:99px;background:var(--acc2);color:#1d1a10}
+.st.Prepared{background:var(--acc);color:var(--on)}.st.Delivered{background:var(--line);color:var(--mute)}.st.Cancelled,.st.Expired,.st.PendingPayment{background:var(--bad);color:#fff}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}.stat b{display:block;font-size:24px}.stat span{color:var(--mute);font-size:13px}
+.bar{position:fixed;left:0;right:0;bottom:0;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);display:flex;justify-content:space-between;align-items:center;z-index:6}
+.bar .btn{background:var(--acc2);color:#1d1a10}
+.empty{color:var(--mute);padding:20px 0;text-align:center}
+.hide{display:none!important}
+.hero{display:grid;gap:12px;margin-top:10px}
+.role{display:block;width:100%;text-align:left;padding:22px 18px;border-radius:16px;border:2px solid var(--line);background:var(--card);color:var(--ink);font:inherit;cursor:pointer}
+.role b{display:block;font-size:22px;font-weight:800}.role span{color:var(--mute)}
+.role.s{background:var(--acc);border-color:var(--acc);color:var(--on)}.role.s span{color:var(--on);opacity:.85}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.note{background:var(--acc2);color:#1d1a10;border-radius:10px;padding:8px 12px;font-size:14px;margin:6px 0}
+.err{color:var(--bad);margin:6px 0}
+.q.me{border:2px solid var(--acc)}
+.strip{display:flex;gap:12px;align-items:center;background:var(--acc2);color:#1d1a10;border-radius:12px;padding:12px;margin:6px 0 12px}.strip.Prepared{background:var(--acc);color:var(--on)}.strip .tok{background:#1d1a10;color:#fff}
+.bill{border:2px dashed var(--line)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--acc2);outline-offset:2px}
+</style>
+</head>
+<body>
+<header><div class="top"><div><h1>Canteen</h1><div style="color:var(--mute)" id="sub"></div></div><button class="btn alt sm hide" id="sw" onclick="setRole(null)">Switch</button></div></header>
+<nav id="nav" class="hide"></nav>
+<main id="app"><div class="empty">Loading…</div></main>
+<div class="bar hide" id="bar"><span id="barTxt"></span><button class="btn" onclick="tab='cart';render()">Review order</button></div>
+<script>
+'use strict';
+const cur = '₹';
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+function lget(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+function lset(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* ignore */ } }
+
+let role = lget('cm_role', null), tab = null, cat = 'All', cart = {};
+let draft = { name: lget('cm_name', ''), type: 'Dine in', pay: 'ONLINE', bn: null, mn: '', mc: '', mp: '', mq: '', find: '', go: '' };
+let pub = null, mine = [], st = null, sales = null;
+let staffTok = lget('cm_st', ''), mineIds = lget('cm_mine', []);
+let busy = false, msg = '', dirty = false, lastSig = '';
+
+async function api(path, opts) {
+  opts = opts || {};
+  const h = { 'Content-Type': 'application/json' };
+  if (staffTok) h.Authorization = 'Bearer ' + staffTok;
+  const r = await fetch(path, { method: opts.method || 'GET', headers: h, body: opts.body ? JSON.stringify(opts.body) : undefined });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    if (r.status === 401 && staffTok && path.indexOf('/staff/login') < 0) { staffTok = ''; lset('cm_st', ''); render(); }
+    throw new Error(d.error || 'Something went wrong. Please try again.');
+  }
+  return d;
+}
+
+const typing = () => { const a = document.activeElement; return a && /^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName); };
+async function poll(force) {
+  try { pub = await api('/api/public'); } catch (e) { /* offline */ }
+  if (mineIds.length) { try { mine = (await api('/api/orders?ids=' + mineIds.join(','))).orders; } catch (e) { /* ignore */ } }
+  if (role === 'staff' && staffTok) {
+    try { st = (await api('/api/staff/orders')).orders; } catch (e) { /* ignore */ }
+    if (tab === 'sales') { try { sales = await api('/api/staff/sales'); } catch (e) { /* ignore */ } }
+  }
+  const sig = JSON.stringify([pub, mine, st, sales, staffTok]);
+  if (force || sig !== lastSig) { lastSig = sig; if (force || !typing()) render(); else dirty = true; }
+}
+document.addEventListener('focusout', () => { setTimeout(() => { if (dirty && !typing()) { dirty = false; render(); } }, 50); });
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') poll(); });
+setInterval(poll, 3000);
+
+function setRole(r) { role = r; tab = r === 'staff' ? 'queue' : r === 'student' ? 'order' : null; cart = {}; msg = ''; lset('cm_role', r); poll(true); }
+function go(t) { tab = t; msg = ''; if (t === 'sales') poll(true); else render(); }
+function setCat(c) { cat = c; render(); }
+function inp(k, v) { draft[k] = v; }
+
+// ---------- cart ----------
+const find = id => pub && pub.menu.find(m => m.id === id);
+const cartN = () => Object.values(cart).reduce((a, b) => a + b, 0);
+const cartSub = () => Object.entries(cart).reduce((s, [id, q]) => s + q * ((find(id) || {}).eff || 0), 0);
+const feeNow = () => (draft.type === 'Parcel' && pub ? pub.parcelFee : 0);
+function add(id) {
+  const m = find(id); if (!m || !m.avail) return;
+  if (m.qty !== null && (cart[id] || 0) >= m.qty) { alert('Only ' + m.qty + ' ' + m.name + ' available.'); return; }
+  cart[id] = (cart[id] || 0) + 1; render();
+}
+function dec(id) { if (--cart[id] <= 0) delete cart[id]; render(); }
+
+// ---------- placing and paying ----------
+async function place() {
+  if (busy || !cartN()) return;
+  const name = draft.name.trim();
+  if (!name) { msg = 'Enter your name so we can call you.'; render(); return; }
+  busy = true; msg = ''; render();
+  try {
+    const items = Object.entries(cart).map(([id, q]) => ({ id, q }));
+    const r = await api('/api/orders', { method: 'POST', body: { name, type: draft.type, pay: draft.pay, items } });
+    lset('cm_name', name);
+    mineIds.unshift(r.order.id); mineIds = mineIds.slice(0, 30); lset('cm_mine', mineIds);
+    cart = {}; tab = 'bill';
+    await poll(true);
+    if (r.order.pay === 'ONLINE') await startPay(r.order, r.keyId, r.amount, r.mock);
+  } catch (e) { msg = e.message; }
+  busy = false; await poll(true);
+}
+
+async function startPay(o, keyId, amount, mock) {
+  msg = '';
+  if (mock) {
+    const s = await api('/api/dev/pay/' + o.id, { method: 'POST' });
+    await api('/api/orders/' + o.id + '/verify', { method: 'POST', body: s });
+    return;
+  }
+  if (!window.Razorpay) { msg = 'Could not load the payment window. Check your internet and tap Retry payment.'; return; }
+  await new Promise(resolve => {
+    const rz = new Razorpay({
+      key: keyId, amount: amount, currency: 'INR', name: 'Canteen', description: 'Food order',
+      order_id: o.rpOrder, prefill: { name: o.name }, theme: { color: '#1f6b4a' },
+      handler: async resp => {
+        try { await api('/api/orders/' + o.id + '/verify', { method: 'POST', body: resp }); }
+        catch (e) { msg = 'We got your payment but are still confirming it. Your order will appear here in a moment.'; }
+        resolve();
+      },
+      modal: { ondismiss: () => resolve() }
+    });
+    rz.on('payment.failed', () => { msg = 'Payment failed. Tap Retry payment to try again.'; });
+    rz.open();
+  });
+}
+async function retryPay(id) {
+  if (busy) return; const o = mine.find(x => x.id === id); if (!o) return;
+  busy = true; render();
+  try { await startPay(o, pub.keyId, o.total * 100, pub.mock); } catch (e) { msg = e.message; }
+  busy = false; await poll(true);
+}
+async function cancelMine(id) {
+  if (!confirm('Cancel this order?')) return;
+  try { await api('/api/orders/' + id + '/cancel', { method: 'POST' }); } catch (e) { msg = e.message; }
+  poll(true);
+}
+
+// ---------- staff actions ----------
+async function staffDo(fn) { try { await fn(); } catch (e) { alert(e.message); } await poll(true); }
+const setStatus = (id, status) => staffDo(() => api('/api/staff/orders/' + id + '/status', { method: 'POST', body: { status } }));
+const cancelOrder = id => { if (confirm('Cancel this order? Its stock is returned. If it was paid online you must refund it from your Razorpay dashboard.')) staffDo(() => api('/api/staff/orders/' + id + '/cancel', { method: 'POST' })); };
+const refunded = id => staffDo(() => api('/api/staff/orders/' + id + '/refunded', { method: 'POST' }));
+const setQty = (id, v) => staffDo(() => api('/api/staff/menu/' + id, { method: 'PATCH', body: { qty: v.trim() === '' ? null : Number(v) } }));
+const setDisc = (id, v) => staffDo(() => api('/api/staff/menu/' + id, { method: 'PATCH', body: { disc: v.trim() === '' ? 0 : Number(v) } }));
+const togAvail = (id, a) => staffDo(() => api('/api/staff/menu/' + id, { method: 'PATCH', body: { avail: a } }));
+const delItem = id => { if (confirm('Remove this item from the menu?')) staffDo(() => api('/api/staff/menu/' + id, { method: 'DELETE' })); };
+function addItem() {
+  staffDo(async () => {
+    await api('/api/staff/menu', { method: 'POST', body: { name: draft.mn, cat: draft.mc, price: draft.mp, qty: draft.mq } });
+    draft.mn = draft.mp = draft.mq = '';
+  });
+}
+const saveBanner = () => staffDo(async () => { await api('/api/staff/banner', { method: 'PUT', body: { text: draft.bn == null ? (pub.banner || '') : draft.bn } }); alert('Saved'); });
+async function download(path, name) {
+  try {
+    const r = await fetch(path, { headers: { Authorization: 'Bearer ' + staffTok } });
+    if (!r.ok) throw new Error('Download failed. Please sign in again.');
+    const blob = await r.blob(), a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  } catch (e) { alert(e.message); }
+}
+const dl = (k) => { const d = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }); k === 'csv' ? download('/api/staff/export', 'canteen-orders-' + d + '.csv') : download('/api/staff/backup', 'canteen-backup-' + d + '.json'); };
+async function login() {
+  try { const r = await api('/api/staff/login', { method: 'POST', body: { pin: $('#pin').value } }); staffTok = r.token; lset('cm_st', staffTok); tab = 'queue'; msg = ''; poll(true); }
+  catch (e) { msg = e.message; render(); }
+}
+
+// ---------- views ----------
+const num = o => o.token;
+const itemsText = o => o.items.map(i => i.q + ' ' + i.n).join(' and ');
+const statusLabel = o => ({ PendingPayment: 'Payment not completed', Expired: 'Payment time ran out', Cancelled: 'Cancelled' }[o.status] || o.status);
+
+function vOrder() {
+  if (!pub.menu.length) return '<div class="empty">The menu isn’t set up yet. Please check with canteen staff.</div>';
+  const cats = ['All', ...new Set(pub.menu.map(m => m.cat))], list = pub.menu.filter(m => cat === 'All' || m.cat === cat);
+  return `<div class="chips">${cats.map(c => `<button class="chip ${c === cat ? 'on' : ''}" data-c="${esc(c)}" onclick="setCat(this.dataset.c)">${esc(c)}</button>`).join('')}</div>
+  <div class="grid">${list.map(m => card(m)).join('')}</div>`;
+}
+function card(m) {
+  return `<button class="item ${m.avail ? '' : 'off'}" ${m.avail ? `onclick="add('${m.id}')"` : 'disabled'}><b>${esc(m.name)}</b><small>${m.avail ? esc(m.cat) + (m.qty !== null && m.qty <= 5 ? ' · only ' + m.qty + ' left' : '') : 'Sold out'}</small>
+  <span class="p">${cur}${m.eff}${m.disc ? ` <s style="font-weight:400;color:var(--mute);font-size:14px">${cur}${m.price}</s>` : ''}</span>${m.disc && m.avail ? `<small><b>${m.disc}% OFF</b></small>` : ''}${cart[m.id] ? `<small>In order: ${cart[m.id]}</small>` : ''}</button>`;
+}
+function vOffers() {
+  if (role === 'staff') return `<div class="panel"><h2>Offer message (optional)</h2><div class="f"><input class="w" placeholder="e.g. Special offers today!" value="${esc(draft.bn == null ? pub.banner : draft.bn)}" oninput="inp('bn',this.value)"></div><button class="btn" onclick="saveBanner()">Save message</button></div>
+  <div class="panel"><h2>Set discounts</h2><div style="color:var(--mute);font-size:14px;margin-bottom:6px">Type the % off for an item. Empty or 0 ends the offer.</div>${pub.menu.length ? pub.menu.map(m => `<div class="row"><span>${esc(m.name)}<br><small style="color:var(--mute)">${cur}${m.price}${m.disc ? ' → ' + cur + m.eff + ' (' + m.disc + '% off)' : ''}</small></span><input type="number" min="0" max="90" aria-label="Percent off ${esc(m.name)}" placeholder="% off" style="width:80px;padding:6px" value="${m.disc || ''}" onchange="setDisc('${m.id}',this.value)"></div>`).join('') : '<div class="empty">Add menu items first.</div>'}</div>`;
+  const l = pub.menu.filter(m => m.disc > 0);
+  return (pub.banner ? `<div class="note">${esc(pub.banner)}</div>` : '') + (l.length ? `<h2>Offers</h2><div class="grid">${l.map(m => card({ ...m }).replace('class="item ', 'class="item offer ')).join('')}</div>` : '<div class="empty">No offers right now. Check again later.</div>');
+}
+function vCart() {
+  if (!cartN()) return `<div class="empty">Your order is empty.<br><br><button class="btn" onclick="go('order')">Pick items</button></div>`;
+  const fee = feeNow(), total = cartSub() + fee;
+  return `<div class="panel"><h2>Review order</h2>${Object.entries(cart).map(([id, q]) => { const m = find(id); return m ? `<div class="row"><span>${esc(m.name)}<br><small style="color:var(--mute)">${cur}${m.eff} each</small></span><span><button class="btn alt sm" onclick="dec('${id}')">−</button> <b>${q}</b> <button class="btn alt sm" onclick="add('${id}')">+</button></span></div>` : ''; }).join('')}
+  ${fee ? `<div class="row"><span>Parcel charge</span><span>${cur}${fee}</span></div>` : ''}<div class="row"><b>Total</b><b>${cur}${total}</b></div></div>
+  <div class="panel"><h2>Dine in or parcel?</h2><div class="chips"><button class="chip ${draft.type === 'Dine in' ? 'on' : ''}" onclick="draft.type='Dine in';render()">Dine in</button><button class="chip ${draft.type === 'Parcel' ? 'on' : ''}" onclick="draft.type='Parcel';render()">Parcel (+${cur}${pub.parcelFee})</button></div>
+  <h2>Payment</h2><div class="chips">${pub.onlineEnabled ? `<button class="chip ${draft.pay === 'ONLINE' ? 'on' : ''}" onclick="draft.pay='ONLINE';render()">Pay online (GPay / UPI)</button>` : ''}<button class="chip ${draft.pay === 'COD' || !pub.onlineEnabled ? 'on' : ''}" onclick="draft.pay='COD';render()">Pay at counter</button></div>
+  ${draft.pay === 'ONLINE' && pub.onlineEnabled ? `<div class="note">You will go to Google Pay / UPI to pay ${cur}${total}. Your order is placed only after the payment succeeds.</div>` : ''}
+  <input aria-label="Your name" placeholder="Your name" value="${esc(draft.name)}" oninput="inp('name',this.value)"></div>
+  ${msg ? `<div class="err">${esc(msg)}</div>` : ''}
+  <button class="btn" ${busy ? 'disabled' : ''} onclick="draft.pay=(draft.pay==='ONLINE'&&!pub.onlineEnabled)?'COD':draft.pay;place()" style="width:100%">${busy ? 'Please wait…' : (draft.pay === 'ONLINE' && pub.onlineEnabled ? 'Pay ' + cur + total : 'Place order · ' + cur + total)}</button>
+  <button class="btn alt" onclick="go('order')" style="width:100%;margin-top:8px">Add more items</button>`;
+}
+function bill(o, staff) {
+  const nx = { Preparing: 'Prepared', Prepared: 'Delivered' };
+  const pending = o.status === 'PendingPayment', dead = ['Cancelled', 'Expired'].includes(o.status);
+  return `<div class="panel bill"><div style="text-align:center"><b style="font-size:18px">Canteen Bill</b><div style="color:var(--mute);font-size:14px">${esc(o.day)} · ${new Date(o.created).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+  ${o.token ? `<div style="font-size:14px;margin-top:8px">Token number</div><div style="font-size:64px;font-weight:800;line-height:1;margin:4px 0">${o.token}</div>` : '<div style="height:10px"></div>'}<span class="st ${o.status}">${statusLabel(o)}</span></div>
+  <div style="margin:10px 0;font-size:14px">${esc(o.name)} · ${o.type === 'Parcel' ? 'Parcel' : 'Dine in'}</div>
+  ${o.items.map(i => `<div class="row"><span>${i.q} × ${esc(i.n)}</span><span>${cur}${i.q * i.p}</span></div>`).join('')}
+  ${o.fee ? `<div class="row"><span>Parcel charge</span><span>${cur}${o.fee}</span></div>` : ''}
+  <div class="row"><b>Total</b><b>${cur}${o.total}</b></div>
+  <div class="row"><span>Payment</span><span>${o.pay === 'ONLINE' ? 'Online (GPay / UPI)' : 'At counter'} · ${o.paid ? 'Paid' : 'Not paid'}</span></div>
+  ${staff ? `<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">${nx[o.status] ? `<button class="btn sm" onclick="setStatus('${o.id}','${nx[o.status]}')">${o.status === 'Preparing' ? 'Mark prepared' : (o.pay === 'COD' ? 'Collect cash & give order' : 'Give order (mark delivered)')}</button>` : ''}${['Preparing', 'Prepared'].includes(o.status) ? `<button class="btn bad sm" onclick="cancelOrder('${o.id}')">Cancel order</button>` : ''}${o.status === 'Delivered' ? '<b>Already delivered</b>' : ''}</div>`
+    : pending ? `<div class="note">Your order is not placed yet. It is placed only after the payment succeeds.</div><div style="display:flex;gap:8px"><button class="btn" ${busy ? 'disabled' : ''} onclick="retryPay('${o.id}')">Retry payment</button><button class="btn bad" onclick="cancelMine('${o.id}')">Cancel</button></div>`
+    : `<div style="text-align:center;color:var(--mute);margin-top:8px;font-size:14px">${dead ? 'This order was not completed. If money was taken it will be refunded.' : o.status === 'Delivered' ? 'Order delivered.' : o.status === 'Prepared' ? 'Your order is prepared. Show this token number at the counter.' : 'Show this token number at the counter when called.'}</div>`}</div>`;
+}
+function vBill() {
+  const l = [...mine].sort((a, b) => b.created - a.created);
+  return (msg ? `<div class="err">${esc(msg)}</div>` : '') + (l.length ? l.map(o => bill(o, false)).join('') : '<div class="empty">No bill yet. Place an order to get your token number.</div>');
+}
+function strip() {
+  return mine.filter(o => ['Preparing', 'Prepared'].includes(o.status)).sort((a, b) => a.created - b.created).map(o => `<div class="strip ${o.status}"><span class="tok" style="font-size:28px">${o.token}</span><div><b>${o.status === 'Preparing' ? 'Preparing your order' : 'Prepared! Collect at the counter'}</b><div style="font-size:14px">Token ${o.token} · ${esc(itemsText(o))}</div></div></div>`).join('');
+}
+function vQueue() {
+  if (role === 'staff') return vStaffQueue();
+  const myTok = new Set(mine.filter(o => o.token).map(o => o.token));
+  return `<h2>Queue (${pub.queue.length} waiting)</h2>` + (pub.queue.length ? pub.queue.map(o => `<div class="panel q ${myTok.has(o.token) ? 'me' : ''}"><div style="display:flex;gap:10px;align-items:flex-start"><span class="tok" style="font-size:26px">${o.token}</span><b style="font-size:17px;padding-top:3px">${esc(o.items.map(i => i.q + ' ' + i.n).join(' and '))}</b></div><div style="margin-top:6px"><span class="st ${o.status}">${o.status}</span> <small style="color:var(--mute)">${o.type}${myTok.has(o.token) ? ' · your order' : ''}</small></div></div>`).join('') : '<div class="empty">No orders waiting.</div>');
+}
+function qcard(o) {
+  const nx = { Preparing: 'Prepared', Prepared: 'Delivered' };
+  return `<div class="panel q"><div style="display:flex;gap:10px;align-items:flex-start"><span class="tok" style="font-size:26px">${o.token || '-'}</span><b style="font-size:17px;padding-top:3px">${esc(itemsText(o))}</b></div>
+  <div style="color:var(--mute);font-size:14px;margin:6px 0 8px">${esc(o.name)} · ${new Date(o.created).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · ${o.type === 'Parcel' ? 'Parcel' : 'Dine in'} · ${o.pay === 'ONLINE' ? 'Paid online' : (o.paid ? 'Cash paid' : 'Collect ' + cur + o.total + ' cash')}${o.paymentId ? ' · ' + esc(o.paymentId) : ''}</div>
+  <div class="row" style="border:0"><span><span class="st ${o.status}">${statusLabel(o)}</span> <b>${cur}${o.total}</b></span><span>${nx[o.status] ? `<button class="btn sm" onclick="setStatus('${o.id}','${nx[o.status]}')">${o.status === 'Preparing' ? 'Mark prepared' : 'Give order'}</button> ` : ''}${['Preparing', 'Prepared'].includes(o.status) ? `<button class="btn bad sm" onclick="cancelOrder('${o.id}')">Cancel</button>` : ''}</span></div></div>`;
+}
+function vStaffQueue() {
+  const orders = st || [];
+  const act = orders.filter(o => ['Preparing', 'Prepared'].includes(o.status)).sort((a, b) => a.created - b.created);
+  const done = orders.filter(o => o.status === 'Delivered').sort((a, b) => b.created - a.created);
+  const refunds = orders.filter(o => o.refund);
+  const q = draft.go, r = q ? orders.filter(o => String(o.token) === String(q).trim()) : [];
+  let h = '';
+  if (refunds.length) h += `<div class="panel" style="border:2px solid var(--bad)"><h2>Refunds needed</h2>${refunds.map(o => `<div class="row"><span>Token ${o.token || '-'} · ${esc(o.name)} · ${cur}${o.total}<br><small style="color:var(--mute)">${esc(o.paymentId)}</small></span><button class="btn sm" onclick="refunded('${o.id}')">Refund done</button></div>`).join('')}<small style="color:var(--mute)">Refund these in your Razorpay dashboard (Transactions → Payments), then tap Refund done.</small></div>`;
+  h += `<div class="panel"><h2>Check a token</h2><div style="display:flex;gap:8px"><input type="number" inputmode="numeric" placeholder="Token number" value="${esc(draft.find)}" oninput="inp('find',this.value)" onkeydown="if(event.key==='Enter'){draft.go=draft.find;render()}"><button class="btn" onclick="draft.go=draft.find;render()">Check</button></div>${q ? (r.length ? r.map(o => bill(o, true)).join('') : `<div class="note">No order with token ${esc(q)} today.</div>`) : ''}</div>`;
+  h += `<h2>Queue (${act.length} waiting)</h2>` + (act.length ? act.map(qcard).join('') : '<div class="empty">No orders waiting.</div>');
+  if (done.length) h += `<h2 style="margin-top:18px">Delivered today</h2>` + done.map(qcard).join('');
+  return h;
+}
+function vMenu() {
+  return `<div class="panel"><h2>Add menu item</h2><div class="f"><input class="w" placeholder="Item name" value="${esc(draft.mn)}" oninput="inp('mn',this.value)"><input placeholder="Category" list="cl" value="${esc(draft.mc)}" oninput="inp('mc',this.value)"><input type="number" min="1" placeholder="Price (${cur})" value="${esc(draft.mp)}" oninput="inp('mp',this.value)"><input class="w" type="number" min="0" placeholder="Quantity available (empty = no limit)" value="${esc(draft.mq)}" oninput="inp('mq',this.value)"></div>
+  <datalist id="cl">${[...new Set(pub.menu.map(m => m.cat))].map(c => `<option value="${esc(c)}">`).join('')}</datalist><button class="btn" onclick="addItem()">Add item</button></div>
+  <div class="panel"><h2>Menu (${pub.menu.length})</h2>${pub.menu.length ? pub.menu.map(m => `<div class="row"><span>${esc(m.name)}<br><small style="color:var(--mute)">${esc(m.cat)} · ${cur}${m.price}${m.disc ? ' → ' + cur + m.eff + ' (' + m.disc + '% off)' : ''} · <b>${m.avail ? 'Available' : 'Sold out'}</b>${m.qty !== null ? ' · ' + m.qty + ' left' : ''}</small></span><span><input type="number" min="0" aria-label="Quantity" placeholder="Qty" style="width:72px;padding:6px" value="${m.qty === null ? '' : m.qty}" onchange="setQty('${m.id}',this.value)"> <button class="btn alt sm" onclick="togAvail('${m.id}',${m.avail && !(m.qty === 0) ? 'false' : 'true'})">${m.avail ? 'Mark sold out' : 'Mark available'}</button> <button class="btn bad sm" onclick="delItem('${m.id}')">Remove</button></span></div>`).join('') : '<div class="empty">No items yet. Add your first item above.</div>'}</div>`;
+}
+function vSales() {
+  const s = sales; if (!s) return '<div class="empty">Loading…</div>';
+  return `<div class="stats"><div class="stat"><b>${cur}${s.revenue}</b><span>Today's sales</span></div><div class="stat"><b>${s.orders}</b><span>Orders</span></div><div class="stat"><b>${cur}${s.orders ? Math.round(s.revenue / s.orders) : 0}</b><span>Avg order</span></div></div>
+  <div class="stats"><div class="stat"><b>${cur}${s.online}</b><span>Paid online</span></div><div class="stat"><b>${cur}${s.cod}</b><span>Cash at counter</span></div><div class="stat"><b></b><span></span></div></div>
+  <div class="panel"><h2>Download your data</h2><div style="color:var(--mute);font-size:14px;margin-bottom:8px">Every order saved so far (last 60 days). The spreadsheet opens in Excel or Google Sheets.</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" onclick="dl('csv')">Download all orders (spreadsheet)</button><button class="btn alt" onclick="dl('json')">Download full backup</button></div></div>
+  <div class="panel"><h2>Best sellers today</h2>${s.top.length ? s.top.map(t => `<div class="row"><span>${esc(t.n)}</span><b>${t.q} sold</b></div>`).join('') : '<div class="empty">No sales yet.</div>'}</div>`;
+}
+
+function render() {
+  const A = $('#app');
+  $('#sw').classList.toggle('hide', !role);
+  $('#sub').textContent = role === 'staff' ? 'Staff' : role === 'student' ? 'Student ordering' : 'Welcome';
+  const nav = $('#nav'), bar = $('#bar');
+  if (!pub) { A.innerHTML = '<div class="empty">Loading…</div>'; return; }
+  if (role === 'student' && !tab) tab = 'order';
+  if (role === 'staff' && staffTok && !tab) tab = 'queue';
+  for (const k of Object.keys(cart)) if (!find(k)) delete cart[k];
+  if (!role) {
+    nav.classList.add('hide'); bar.classList.add('hide');
+    A.innerHTML = `<div class="hero"><button class="role s" onclick="setRole('student')"><b>I'm a student</b><span>Order food and track your token</span></button><button class="role" onclick="setRole('staff')"><b>Canteen staff</b><span>Queue, menu, offers and sales</span></button></div>`; return;
+  }
+  if (role === 'staff' && !staffTok) {
+    nav.classList.add('hide'); bar.classList.add('hide');
+    A.innerHTML = `<div class="panel"><h2>Staff PIN</h2><input id="pin" type="password" inputmode="numeric" placeholder="Enter PIN" onkeydown="if(event.key==='Enter')login()"><div class="err">${esc(msg)}</div><button class="btn" onclick="login()">Open staff area</button></div>`; return;
+  }
+  const T = role === 'staff' ? [['queue', 'Queue'], ['menu', 'Menu'], ['offers', 'Offers'], ['sales', 'Sales']] : [['order', 'Menu'], ['offers', 'Offers'], ['bill', 'My bill'], ['queue', 'Queue']];
+  const waiting = pub.queue.length, nOff = pub.menu.filter(m => m.disc > 0 && m.avail).length;
+  nav.classList.remove('hide');
+  nav.innerHTML = T.map(([k, l]) => `<button class="${tab === k || (k === 'order' && tab === 'cart') ? 'on' : ''}" onclick="go('${k}')">${l}${k === 'queue' && waiting ? ' (' + waiting + ')' : ''}${k === 'offers' && role === 'student' && nOff ? ' (' + nOff + ')' : ''}</button>`).join('');
+  bar.classList.toggle('hide', !(cartN() && (tab === 'order' || tab === 'offers')));
+  $('#barTxt').textContent = cartN() + ' items · ' + cur + cartSub();
+  const views = { order: vOrder, cart: vCart, bill: vBill, queue: vQueue, menu: vMenu, offers: vOffers, sales: vSales };
+  A.innerHTML = (role === 'student' && tab !== 'bill' ? strip() : '') + views[tab]();
+}
+poll(true);
+</script>
+<script>if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));</script>
+</body>
+</html>
